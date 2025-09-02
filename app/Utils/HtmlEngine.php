@@ -14,6 +14,7 @@ namespace App\Utils;
 
 use App\Helpers\Epc\EpcQrGenerator;
 use App\Helpers\SwissQr\SwissQrGenerator;
+use App\Helpers\SwissQr\SwissQrPaymentScheduleGenerator;
 use App\Models\Account;
 use App\Models\Country;
 use App\Models\CreditInvitation;
@@ -207,7 +208,7 @@ class HtmlEngine
         $data['$location.custom3'] = &$data['$location3'];
         $data['$location.custom4'] = &$data['$location4'];
 
-        if ($this->entity_string == 'invoice' || $this->entity_string == 'recurring_invoice') {        
+        if ($this->entity_string == 'invoice' || $this->entity_string == 'recurring_invoice') {
             $data['$entity'] = ['value' => ctrans('texts.invoice'), 'label' => ctrans('texts.invoice')];
             $data['$number'] = ['value' => $this->entity->number ?: ' ', 'label' => ctrans('texts.invoice_number')];
             $data['$invoice'] = ['value' => $this->entity->number ?: ' ', 'label' => ctrans('texts.invoice_number')];
@@ -226,7 +227,7 @@ class HtmlEngine
             $data['$invoice.custom2'] = ['value' => $this->helpers->formatCustomFieldValue($this->company->custom_fields, 'invoice2', $this->entity->custom_value2, $this->client) ?: ' ', 'label' => $this->helpers->makeCustomField($this->company->custom_fields, 'invoice2')];
             $data['$invoice.custom3'] = ['value' => $this->helpers->formatCustomFieldValue($this->company->custom_fields, 'invoice3', $this->entity->custom_value3, $this->client) ?: ' ', 'label' => $this->helpers->makeCustomField($this->company->custom_fields, 'invoice3')];
             $data['$invoice.custom4'] = ['value' => $this->helpers->formatCustomFieldValue($this->company->custom_fields, 'invoice4', $this->entity->custom_value4, $this->client) ?: ' ', 'label' => $this->helpers->makeCustomField($this->company->custom_fields, 'invoice4')];
-            
+
             $data['$custom1'] = &$data['$invoice.custom1'];
             $data['$custom2'] = &$data['$invoice.custom2'];
             $data['$custom3'] = &$data['$invoice.custom3'];
@@ -262,6 +263,25 @@ class HtmlEngine
                 } catch (\Exception $e) {
                     $data['$swiss_qr'] = ['value' => '', 'label' => ''];
                     $data['$swiss_qr_raw'] = ['value' => '', 'label' => ''];
+                }
+
+                // Payment Schedule QR codes - generates multiple QR pages for payment schedules; fallback to SwissQrGenerator if no payment schedules
+                if (method_exists($this->entity, 'hasPaymentSchedules') && $this->entity->hasPaymentSchedules()) {
+                    try {
+                        $data['$payment_schedule_qr'] = ['value' => (new SwissQrPaymentScheduleGenerator($this->entity, $this->company))->run(), 'label' => ''];
+                        $data['$payment_schedule_qr_raw'] = ['value' => html_entity_decode($data['$payment_schedule_qr']['value']), 'label' => ''];
+                    } catch (\Exception $e) {
+                        $data['$payment_schedule_qr'] = ['value' => '', 'label' => ''];
+                        $data['$payment_schedule_qr_raw'] = ['value' => '', 'label' => ''];
+                    }
+                } else {
+                    try {
+                        $data['$payment_schedule_qr'] = ['value' => (new SwissQrGenerator($this->entity, $this->company))->run(), 'label' => ''];
+                        $data['$payment_schedule_qr_raw'] = ['value' => html_entity_decode($data['$payment_schedule_qr']['value']), 'label' => ''];
+                    } catch (\Exception $e) {
+                        $data['$payment_schedule_qr'] = ['value' => '', 'label' => ''];
+                        $data['$payment_schedule_qr_raw'] = ['value' => '', 'label' => ''];
+                    }
                 }
             }
         }

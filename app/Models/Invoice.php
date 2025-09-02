@@ -906,4 +906,14 @@ class Invoice extends BaseModel
 
         return ctrans('texts.payment_schedule_interval', ['index' => $index+1, 'total' => count($schedule_array), 'amount' => $amount]);
     }
+
+    public function hasPaymentSchedules(): bool
+    {
+        $schedule = \App\Models\Scheduler::where('company_id', $this->company_id)
+                            ->where('template', 'payment_schedule')                           
+                            ->where('parameters->invoice_id', $this->hashed_id)
+                            ->first();
+
+        return $schedule && isset($schedule->parameters['schedule']) && !empty($schedule->parameters['schedule']);
+    }
 }
