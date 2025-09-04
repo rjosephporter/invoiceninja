@@ -268,19 +268,19 @@ class HtmlEngine
                 // Payment Schedule QR codes - generates multiple QR pages for payment schedules; fallback to SwissQrGenerator if no payment schedules
                 if (method_exists($this->entity, 'hasPaymentSchedules') && $this->entity->hasPaymentSchedules()) {
                     try {
-                        $data['$payment_schedule_qr'] = ['value' => (new SwissQrPaymentScheduleGenerator($this->entity, $this->company))->run(), 'label' => ''];
-                        $data['$payment_schedule_qr_raw'] = ['value' => html_entity_decode($data['$payment_schedule_qr']['value']), 'label' => ''];
+                        $data['$multiple_qr'] = ['value' => (new SwissQrPaymentScheduleGenerator($this->entity, $this->company))->run(), 'label' => ''];
+                        $data['$multiple_qr_raw'] = ['value' => html_entity_decode($data['$multiple_qr']['value']), 'label' => ''];
                     } catch (\Exception $e) {
-                        $data['$payment_schedule_qr'] = ['value' => '', 'label' => ''];
-                        $data['$payment_schedule_qr_raw'] = ['value' => '', 'label' => ''];
+                        $data['$multiple_qr'] = ['value' => '', 'label' => ''];
+                        $data['$multiple_qr_raw'] = ['value' => '', 'label' => ''];
                     }
                 } else {
                     try {
-                        $data['$payment_schedule_qr'] = ['value' => (new SwissQrGenerator($this->entity, $this->company))->run(), 'label' => ''];
-                        $data['$payment_schedule_qr_raw'] = ['value' => html_entity_decode($data['$payment_schedule_qr']['value']), 'label' => ''];
+                        $data['$multiple_qr'] = ['value' => (new SwissQrGenerator($this->entity, $this->company))->run(), 'label' => ''];
+                        $data['$multiple_qr_raw'] = ['value' => html_entity_decode($data['$multiple_qr']['value']), 'label' => ''];
                     } catch (\Exception $e) {
-                        $data['$payment_schedule_qr'] = ['value' => '', 'label' => ''];
-                        $data['$payment_schedule_qr_raw'] = ['value' => '', 'label' => ''];
+                        $data['$multiple_qr'] = ['value' => '', 'label' => ''];
+                        $data['$multiple_qr_raw'] = ['value' => '', 'label' => ''];
                     }
                 }
             }
