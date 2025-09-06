@@ -195,7 +195,7 @@ class HtmlEngine
         $data['$payment_schedule_interval'] = ['value' => '', 'label' => ctrans('texts.payment_schedule')];
 
         if(method_exists($this->entity, 'paymentSchedule')) {
-            $data['$payment_schedule'] = ['value' => $this->entity->paymentSchedule(true), 'label' => ctrans('texts.payment_schedule')];
+            $data['$payment_schedule'] = ['value' => $this->entity->paymentScheduleCustom(true), 'label' => ctrans('texts.payment_schedule')];
             $data['$payment_schedule_interval'] = ['value' => $this->entity->paymentScheduleInterval(), 'label' => ctrans('texts.payment_schedule')];
         }
 

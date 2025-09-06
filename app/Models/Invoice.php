@@ -361,7 +361,7 @@ class Invoice extends BaseModel
     public function transaction_events(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(TransactionEvent::class);
-    }    
+    }
 
     public function client(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -478,7 +478,7 @@ class Invoice extends BaseModel
 
     public function getStatusAttribute()
     {
-        
+
         $due_date = $this->due_date ? Carbon::parse($this->due_date) : false;
         $partial_due_date = $this->partial_due_date ? Carbon::parse($this->partial_due_date) : false;
 
@@ -698,7 +698,7 @@ class Invoice extends BaseModel
                 break;
         }
     }
-    
+
     public function expense_documents()
     {
         $line_items = $this->line_items;
@@ -834,11 +834,11 @@ class Invoice extends BaseModel
         return $reminder_schedule;
     }
 
-    public function paymentSchedule(bool $formatted = false): mixed 
+    public function paymentSchedule(bool $formatted = false): mixed
     {
 
         $schedule = \App\Models\Scheduler::where('company_id', $this->company_id)
-                            ->where('template', 'payment_schedule')                           
+                            ->where('template', 'payment_schedule')
                             ->where('parameters->invoice_id', $this->hashed_id)
                             ->first();
 
@@ -862,7 +862,7 @@ class Invoice extends BaseModel
             })->toArray();
         }
 
-        
+
         $formatted_string = "<div id=\"payment-schedule\">";
 
         $formatted_string .= "<p><span class=\"payment-schedule-title\"><b>".ctrans('texts.payment_schedule')."</b></span></p>";
@@ -882,10 +882,76 @@ class Invoice extends BaseModel
 
     }
 
+    public function paymentScheduleCustom(bool $formatted = false): mixed
+    {
+        $schedule = \App\Models\Scheduler::where('company_id', $this->company_id)
+            ->where('template', 'payment_schedule')
+            ->where('parameters->invoice_id', $this->hashed_id)
+            ->first();
+
+        if (! $schedule) {
+
+            if($formatted){
+                $formatted_string = "<tr>";
+                $label = "Rechnungsbetrag";
+                $formatted_string .= "<th data-ref=\"entity_details-invoice.total_label\">" . $label . "</th>";
+                $formatted_string .= "<th data-ref=\"entity_details-invoice.total\">";
+
+                $subtotal_amount = collect($this->line_items)
+                    ->sum(function ($item) {
+                        return $item->line_total ?? 0;
+                    });
+                $discount_amount = $this->is_amount_discount ? $this->discount : $subtotal_amount * ($this->discount / 100);
+
+                if ($this->uses_inclusive_taxes || $this->client->country->name !== 'Switzerland') {
+                    $total_amount = $subtotal_amount - $discount_amount;
+                } else {
+                    $total_amount = ($subtotal_amount - $discount_amount) + $this->total_taxes;
+                }
+                $formatted_string .= $this->client->getCurrencyCode() . " " . number_format($total_amount, 2);
+                $formatted_string .= "</th>";
+                $formatted_string .= "</tr>";
+
+                return $formatted_string;
+            }
+            else{
+                return [];
+            }
+        }
+
+        if(!$formatted){
+            return collect($schedule->parameters['schedule'])->map(function ($item) use ($schedule) {
+                return [
+                    'date' => $this->formatDate($item['date'], $this->client->date_format()),
+                    'amount' => $item['is_amount'] ? \App\Utils\Number::formatMoney($item['amount'], $this->client) : $item['amount'] ." %",
+                    'auto_bill' => $schedule->parameters['auto_bill'],
+                ];
+            })->toArray();
+        }
+
+        $formatted_string = "<tr>";
+        $label = "Zahlbar innert";
+        $formatted_string .= "<th style=\"vertical-align: top\" data-ref=\"entity_details-invoice.payment_schedule_label\">" . $label . "</th>";
+        $formatted_string .= "<th data-ref=\"entity_details-invoice.payment_schedule\">";
+        foreach($schedule->parameters['schedule'] as $key => $item){
+            $amount = $item['is_amount'] ? $item['amount'] : round($this->amount * ($item['amount']/100),2);
+            if ($item['date'] == $this->date)
+                $date = "Sofort";
+            else
+                $date = $this->formatDate($item['date'], $this->client->date_format());
+            $schedule_text = $key + 1 . ". Rate (" . $amount . "): " . $date;
+            $formatted_string .= "<p><span class=\"payment-schedule\">".$schedule_text."</span></p>";
+        }
+        $formatted_string .= "</th>";
+        $formatted_string .= "</tr>";
+
+        return $formatted_string;
+    }
+
     public function paymentScheduleInterval(): string
     {
         $schedule = \App\Models\Scheduler::where('company_id', $this->company_id)
-                            ->where('template', 'payment_schedule')                           
+                            ->where('template', 'payment_schedule')
                             ->where('parameters->invoice_id', $this->hashed_id)
                             ->first();
 
@@ -910,7 +976,7 @@ class Invoice extends BaseModel
     public function hasPaymentSchedules(): bool
     {
         $schedule = \App\Models\Scheduler::where('company_id', $this->company_id)
-                            ->where('template', 'payment_schedule')                           
+                            ->where('template', 'payment_schedule')
                             ->where('parameters->invoice_id', $this->hashed_id)
                             ->first();
 

@@ -36,7 +36,7 @@ class SwissQrPaymentScheduleGenerator
         $this->company = $company;
         $this->invoice = $invoice;
         $this->client = $invoice->client;
-        
+
         // Get payment schedule from scheduler
         $this->paymentSchedule = Scheduler::where('company_id', $this->company->id)
             ->where('template', 'payment_schedule')
@@ -51,7 +51,7 @@ class SwissQrPaymentScheduleGenerator
         }
 
         $scheduleArray = $this->paymentSchedule->parameters['schedule'];
-        
+
         if (empty($scheduleArray)) {
             return '';
         }
@@ -63,7 +63,7 @@ class SwissQrPaymentScheduleGenerator
             $qrHtml = $this->generateQrForScheduleItem($scheduleItem, $index + 1, $totalSchedules);
             if (!empty($qrHtml)) {
                 $combinedHtml .= $qrHtml;
-                
+
                 // Add page break between QR codes (except for the last one)
                 if ($index < $totalSchedules - 1) {
                     $combinedHtml .= '<div style="page-break-after: always;"></div>';
@@ -79,7 +79,7 @@ class SwissQrPaymentScheduleGenerator
         try {
             // Calculate the amount for this specific schedule item
             $amount = $this->calculateScheduleAmount($scheduleItem);
-            
+
             // Create a new instance of QrBill
             $qrBill = QrBill\QrBill::create();
 
@@ -121,7 +121,7 @@ class SwissQrPaymentScheduleGenerator
 
             // Add payment reference with schedule identifier
             $referenceNumber = $this->generateScheduleReference($scheduleItem, $currentNumber);
-            
+
             if (strlen($this->company->present()->besr_id()) > 1 && $referenceNumber) {
                 $qrBill->setPaymentReference(
                     QrBill\DataGroup\Element\PaymentReference::create(
@@ -208,11 +208,11 @@ class SwissQrPaymentScheduleGenerator
 
     private function generateAdditionalInfo($scheduleItem, $currentNumber, $totalSchedules)
     {
-        $baseInfo = $this->invoice->public_notes 
-            ? strip_tags($this->invoice->public_notes) 
+        $baseInfo = $this->invoice->public_notes
+            ? strip_tags($this->invoice->public_notes)
             : ctrans('texts.invoice_number_placeholder', ['invoice' => $this->invoice->number]);
 
-        $scheduleInfo = " - Payment {$currentNumber}/{$totalSchedules} - Due: {$scheduleItem['date']}";
+        $scheduleInfo = " - Zahlung {$currentNumber}/{$totalSchedules} - Fällig: " . date('d.m.Y', strtotime($scheduleItem['date']));
 
         $combinedInfo = $baseInfo . $scheduleInfo;
 
