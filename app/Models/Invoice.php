@@ -939,7 +939,7 @@ class Invoice extends BaseModel
                 $date = "Sofort";
             else
                 $date = $this->formatDate($item['date'], $this->client->date_format());
-            $schedule_text = $key + 1 . ". Rate (" . $amount . "): " . $date;
+            $schedule_text = $key + 1 . ". Rate (" . $this->client->getCurrencyCode() . " " . $amount . "): " . $date;
             $formatted_string .= "<p><span class=\"payment-schedule\">".$schedule_text."</span></p>";
         }
         $formatted_string .= "</th>";
