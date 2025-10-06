@@ -934,7 +934,7 @@ class Invoice extends BaseModel
         $formatted_string .= "<th style=\"vertical-align: top\" data-ref=\"entity_details-invoice.payment_schedule_label\">" . $label . "</th>";
         $formatted_string .= "<th data-ref=\"entity_details-invoice.payment_schedule\">";
         foreach($schedule->parameters['schedule'] as $key => $item){
-            $amount = $item['is_amount'] ? $item['amount'] : round($this->amount * ($item['amount']/100),2);
+            $amount = $item['is_amount'] ? number_format($item['amount'], 2, '.', '') : number_format($this->amount * ($item['amount'] / 100), 2, '.', '');
             if ($item['date'] == $this->date)
                 $date = "Sofort";
             else
