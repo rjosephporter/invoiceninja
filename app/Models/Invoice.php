@@ -908,7 +908,7 @@ class Invoice extends BaseModel
                 } else {
                     $total_amount = ($subtotal_amount - $discount_amount) + $this->total_taxes;
                 }
-                $formatted_string .= $this->client->getCurrencyCode() . " " . number_format($total_amount, 2);
+                $formatted_string .= $this->client->getCurrencyCode() . " " . number_format($total_amount, 2, '.', '');
                 $formatted_string .= "</th>";
                 $formatted_string .= "</tr>";
 
